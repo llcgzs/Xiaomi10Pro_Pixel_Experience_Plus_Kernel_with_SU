@@ -345,8 +345,102 @@ ksu_handle_stat(&dfd, &filename, &flags);
 ```
 参照[这里](https://github.com/kissunyeason/kernel_xiaomi_sm8250-immensity/commit/03271214854e33efe56142ddfa12c830addcb32b?diff=split)
 
+## 到这里应该就可以了，直接跳到第5步
+
 ### 4.5 如果你的内核没有 vfs_statx, 使用 vfs_fstatat 来代替它：
-    找到 fs/stat.c
+#### 找到[fs/stat.c](https://github.com/kissunyeason/kernel_xiaomi_sm8250-immensity/blob/thirteen/fs/stat.c)（在你fork的内核源码改！）
+   在
+   ```C
+   int vfs_fstat(unsigned int fd, struct kstat *stat)
+ }
+ EXPORT_SYMBOL(vfs_fstat);
+ 
+ ```
+ 与
+ ```C
+  int vfs_fstatat(int dfd, const char __user *filename, struct kstat *stat,
+ 		int flag)
+ {
+ ```
+ 之间插入
+ ```C
+ extern int ksu_handle_stat(int *dfd, const char __user **filename_user, int *flags);
+
+ ```
+### 4.6 对于早于 4.17 的内核，如果没有 do_faccessat，可以直接找到 faccessat 系统调用的定义然后修改：
+找到[fs/open.c](https://github.com/kissunyeason/kernel_xiaomi_sm8250-immensity/blob/thirteen/fs/open.c)（在你fork的内核源码改！）
+在
+```C
+SYSCALL_DEFINE4(fallocate, int, fd, int, mode, loff_t, offset, loff_t, len)
+ 	return error;
+ }
+ 
+```
+和
+```C
+ /*
+  * access() needs to use the real uid/gid, not the effective uid/gid.
+  * We do this by temporarily clearing all FS-related capabilities and
+```
+之间插入
+```C
+extern int ksu_handle_faccessat(int *dfd, const char __user **filename_user, int *mode,
+			        int *flags);
+```
+在
+```C
+SYSCALL_DEFINE3(faccessat, int, dfd, const char __user *, filename, int, mode)
+ 	int res;
+ 	unsigned int lookup_flags = LOOKUP_FOLLOW;
+ 
+```
+和
+```C
+ 	if (mode & ~S_IRWXO)	/* where's F_OK, X_OK, W_OK, R_OK? */
+ 		return -EINVAL;
+```
+之间插入
+```C
+ksu_handle_faccessat(&dfd, &filename, &mode, NULL);
+
+```
+### 4.6 要使用 KernelSU 内置的安全模式，你还需要修改 drivers/input/input.c 中的 input_handle_event 方法：
+找到[/drivers/input/input.c](https://github.com/kissunyeason/kernel_xiaomi_sm8250-immensity/blob/thirteen/drivers/input/input.c)
+在
+```C
+static int input_get_disposition(struct input_dev *dev,
+        return disposition;
+ }
+
+
+```
+和
+```C
+ static void input_handle_event(struct input_dev *dev,
+```
+之间插入
+```C
+extern int ksu_handle_input_handle_event(unsigned int *type, unsigned int *code, int *value);
+
+```
+在
+```C
+static void input_handle_event(struct input_dev *dev,
+                               unsigned int type, unsigned int code, int value)
+ {
+        int disposition = input_get_disposition(dev, type, code, &value);
+```
+和
+```C
+
+        if (disposition != INPUT_IGNORE_EVENT && type != EV_SYN)
+                add_input_randomness(type, code, value);
+```
+之间插入
+```C
++       ksu_handle_input_handle_event(&type, &code, &value);
+
+```
 ## 5. 开始编译
 ### 5.1 点到 [action](https://github.com/kissunyeason/Xiaomi10Pro_Pixel_Experience_Plus_Kernel_with_SU/actions) 
 ### 5.2 [build-kernel](https://github.com/kissunyeason/Xiaomi10Pro_Pixel_Experience_Plus_Kernel_with_SU/actions/workflows/build-kernel.yml)
