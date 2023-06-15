@@ -206,12 +206,17 @@ LTO 用于优化内核，但有些时候会导致错误
 
 在(大概1916行)
 ```C
-putname(filename);
-return retval;
+static int __do_execve_file(int fd, struct filename *filename,
+ 	return retval;
+ }
 ```
   和  
 ```C
-static int do_execveat_common
+ static int do_execveat_common(int fd, struct filename *filename,
+ 			      struct user_arg_ptr argv,
+ 			      struct user_arg_ptr envp,
+ 			      int flags)
+ {
 ```
 之间插入
 ```C
@@ -225,13 +230,16 @@ void *envp, int *flags);
 
 在(大概1923行)
 ```C
-struct user_arg_ptr envp,
-int flags)
-{
+ static int do_execveat_common(int fd, struct filename *filename,
+ 			      struct user_arg_ptr argv,
+ 			      struct user_arg_ptr envp,
+ 			      int flags)
+ {
 ```
 和
 ```C
-return __do_execve_file(fd, filename, argv, envp, flags, NULL);
+	return __do_execve_file(fd, filename, argv, envp, flags, NULL);
+ }
 ```
 之间插入
 ```C
@@ -243,13 +251,15 @@ ksu_handle_execveat(&fd, &filename, &argv, &envp, &flags);
 
 在（大概349行）
 ```C
-return ksys_fallocate(fd, mode, offset, len);
-}
+SYSCALL_DEFINE4(fallocate, int, fd, int, mode, loff_t, offset, loff_t, len)
+ 	return ksys_fallocate(fd, mode, offset, len);
+ }
 ```
 和
 ```C
 /*
- * access() needs to use the real uid/gid, not the effective uid/gid.
+  * access() needs to use the real uid/gid, not the effective uid/gid.
+  * We do this by temporarily clearing all FS-related capabilities and
 ```
 之间插入
 ```C
@@ -259,14 +269,18 @@ int *flags);
 
 在（大概357行）
 ```C
-long do_faccessat(int dfd, const char __user *filename, int mode)
-{
+SYSCALL_DEFINE4(fallocate, int, fd, int, mode, loff_t, offset, loff_t, len)
+  */
+ long do_faccessat(int dfd, const char __user *filename, int mode)
+ {
 ```
 和
 ```C
-const struct cred *old_cred;
-struct cred *override_cred;
-struct path path;
+ 	const struct cred *old_cred;
+ 	struct cred *override_cred;
+ 	struct path path;
+diff --git a/fs/read_write.c b/fs/read_write.c
+index 650fc7e0f3a6..55be193913b6 100644
 ```
 之间插入
 ```C
@@ -284,7 +298,8 @@ EXPORT_SYMBOL(kernel_read);
 ```C
 ssize_t vfs_read(struct file *file, char __user *buf, size_t count, loff_t *pos)
  {
-ssize_t ret;
+ 	ssize_t ret;
+ 
 ```
 在之间插入
 ```C
@@ -293,13 +308,18 @@ size_t *count_ptr, loff_t **pos);
 ```
 在
 ```C
-ssize_t ret;
+ssize_t vfs_read(struct file *file, char __user *buf, size_t count, loff_t *pos)
+ {
+ 	ssize_t ret;
+ 
 ```
 和
 ```C
-
-if (!(file->f_mode & FMODE_READ))
-return -EBADF;
+ 	if (!(file->f_mode & FMODE_READ))
+ 		return -EBADF;
+ 	if (!(file->f_mode & FMODE_CAN_READ))
+diff --git a/fs/stat.c b/fs/stat.c
+index 376543199b5a..82adcef03ecc 100644
 ```
 之间插入
 ```C
@@ -311,13 +331,16 @@ ksu_handle_vfs_read(&file, &buf, &count, &pos);
 
 在（大概150行）
 ```C
-EXPORT_SYMBOL(vfs_statx_fd);
+int vfs_statx_fd(unsigned int fd, struct kstat *stat,
+ }
+ EXPORT_SYMBOL(vfs_statx_fd);
+ 
 ```
 和
 ```C
-
-/**
- * vfs_statx - Get basic and extra attributes by filename
+ /**
+  * vfs_statx - Get basic and extra attributes by filename
+  * @dfd: A file descriptor representing the base dir for a relative filename
 ```
 之间插入
 ```C
@@ -326,10 +349,9 @@ extern int ksu_handle_stat(int *dfd, const char __user **filename_user, int *fla
 
 在（大概170行）
 ```C
-struct path path;
-int error = -EINVAL;
-unsigned int lookup_flags = LOOKUP_FOLLOW | LOOKUP_AUTOMOUNT;
-ksu_handle_stat(&dfd, &filename, &flags);
+int vfs_statx(int dfd, const char __user *filename, int flags,
+ 	int error = -EINVAL;
+ 	unsigned int lookup_flags = LOOKUP_FOLLOW | LOOKUP_AUTOMOUNT;
 ```
 和
 ```C
@@ -339,7 +361,7 @@ return -EINVAL;
 ```
 之间插入
 ```C
-ksu_handle_stat(&dfd, &filename, &flags);
+	ksu_handle_stat(&dfd, &filename, &flags);
 ```
 参照[这里](https://github.com/kissunyeason/kernel_xiaomi_sm8250-immensity/commit/03271214854e33efe56142ddfa12c830addcb32b?diff=split)
 
