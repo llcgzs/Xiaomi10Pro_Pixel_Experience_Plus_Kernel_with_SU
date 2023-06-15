@@ -182,7 +182,7 @@ As the name suggests, it provides a boot image source system that can boot norma
 The suggestion here is to extract the boot.img corresponding to the ROM, publish it as a release, and then copy the url.
 For example：https://github.com/kissunyeason/Xiaomi10Pro_Pixel_Experience_Plus_Kernel_with_SU/releases/download/offical-boot/boot.img
 
-## 3. 开始编译
+## 3. Start Building
 ### 3.1 [action](https://github.com/kissunyeason/Xiaomi10Pro_Pixel_Experience_Plus_Kernel_with_SU/actions) 
 ### 3.2 [build-kernel](https://github.com/kissunyeason/Xiaomi10Pro_Pixel_Experience_Plus_Kernel_with_SU/actions/workflows/build-kernel.yml)
 ### 3.3 run workflow(right)
