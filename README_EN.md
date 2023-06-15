@@ -280,32 +280,34 @@ u_handle_faccessat(&dfd, &filename, &mode, NULL);
 ```
 Look[here](https://github.com/kissunyeason/kernel_xiaomi_sm8250-immensity/commit/c2e8afafdd7ef3c5b706b6433c82ee00e7154996?diff=split)
 
-### 4.3 修改[fs/read_write.c](https://github.com/kissunyeason/kernel_xiaomi_sm8250-immensity/blob/thirteen/fs/read_write.c)（在你fork的内核源码改！）
-在（大概436行）
+### 4.3 modify[fs/read_write.c](https://github.com/kissunyeason/kernel_xiaomi_sm8250-immensity/blob/thirteen/fs/read_write.c)（modify your fork）
+
+Between（line 436）
 ```C
 EXPORT_SYMBOL(kernel_read);
  
 ```
-和
+and
 ```C
 ssize_t vfs_read(struct file *file, char __user *buf, size_t count, loff_t *pos)
  {
  	ssize_t ret;
  
 ```
-在之间插入
+add
 ```C
 extern int ksu_handle_vfs_read(struct file **file_ptr, char __user **buf_ptr,
 size_t *count_ptr, loff_t **pos);
 ```
-在
+
+Between
 ```C
 ssize_t vfs_read(struct file *file, char __user *buf, size_t count, loff_t *pos)
  {
  	ssize_t ret;
  
 ```
-和
+and
 ```C
  	if (!(file->f_mode & FMODE_READ))
  		return -EBADF;
@@ -313,28 +315,29 @@ ssize_t vfs_read(struct file *file, char __user *buf, size_t count, loff_t *pos)
 diff --git a/fs/stat.c b/fs/stat.c
 index 376543199b5a..82adcef03ecc 100644
 ```
-之间插入
+add
 ```C
 ksu_handle_vfs_read(&file, &buf, &count, &pos);
 ```
-参照[这里](https://github.com/kissunyeason/kernel_xiaomi_sm8250-immensity/commit/0af0751989211c9fbcd6480e1a10b91a9b600477?diff=split)
+Look[here](https://github.com/kissunyeason/kernel_xiaomi_sm8250-immensity/commit/0af0751989211c9fbcd6480e1a10b91a9b600477?diff=split)
 
-### 4.4 修改[fs/stat.c](https://github.com/kissunyeason/kernel_xiaomi_sm8250-immensity/blob/thirteen/fs/stat.c)（在你fork的内核源码改！）
+### 4.4 modify[fs/stat.c](https://github.com/kissunyeason/kernel_xiaomi_sm8250-immensity/blob/thirteen/fs/stat.c)（modify the kernel source code in your fork! ）
 
-在（大概150行）
+
+Between（line 150）
 ```C
 int vfs_statx_fd(unsigned int fd, struct kstat *stat,
  }
  EXPORT_SYMBOL(vfs_statx_fd);
  
 ```
-和
+and
 ```C
  /**
   * vfs_statx - Get basic and extra attributes by filename
   * @dfd: A file descriptor representing the base dir for a relative filename
 ```
-之间插入
+add
 ```C
 extern int ksu_handle_stat(int *dfd, const char __user **filename_user, int *flags);
 ```
@@ -345,80 +348,85 @@ int vfs_statx(int dfd, const char __user *filename, int flags,
  	int error = -EINVAL;
  	unsigned int lookup_flags = LOOKUP_FOLLOW | LOOKUP_AUTOMOUNT;
 ```
-和
+and
 ```C
 if ((flags & ~(AT_SYMLINK_NOFOLLOW | AT_NO_AUTOMOUNT |
 AT_EMPTY_PATH | KSTAT_QUERY_FLAGS)) != 0)
 return -EINVAL;
 ```
-之间插入
+add
 ```C
 	ksu_handle_stat(&dfd, &filename, &flags);
 ```
-参照[这里](https://github.com/kissunyeason/kernel_xiaomi_sm8250-immensity/commit/03271214854e33efe56142ddfa12c830addcb32b?diff=split)
+Look[here](https://github.com/kissunyeason/kernel_xiaomi_sm8250-immensity/commit/03271214854e33efe56142ddfa12c830addcb32b?diff=split)
 
-## 到这里应该就可以了，直接跳到第5步
+## It should be fine here, skip to step 5
 
-### 4.5 如果你的内核没有 vfs_statx, 使用 vfs_fstatat 来代替它：
-#### 找到[fs/stat.c](https://github.com/kissunyeason/kernel_xiaomi_sm8250-immensity/blob/thirteen/fs/stat.c)（在你fork的内核源码改！）
- 在
+### 4.5 If your kernel doesn't have vfs_statx, use vfs_fstatat instead:
+#### find[fs/stat.c](https://github.com/kissunyeason/kernel_xiaomi_sm8250-immensity/blob/thirteen/fs/stat.c)（modify the kernel source code in your fork!）
+ 
+Between
    ```C
    int vfs_fstat(unsigned int fd, struct kstat *stat)
  }
  EXPORT_SYMBOL(vfs_fstat);
  
  ```
- 与
+ and
  ```C
   int vfs_fstatat(int dfd, const char __user *filename, struct kstat *stat,
  		int flag)
  {
  ```
- 之间插入
+ add
  ```C
  extern int ksu_handle_stat(int *dfd, const char __user **filename_user, int *flags);
 
  ```
-### 4.6 对于早于 4.17 的内核，如果没有 do_faccessat，可以直接找到 faccessat 系统调用的定义然后修改：
-找到[fs/open.c](https://github.com/kissunyeason/kernel_xiaomi_sm8250-immensity/blob/thirteen/fs/open.c)（在你fork的内核源码改！）
-在
+### 4.6 For kernels earlier than 4.17, if there is no do_faccessat, you can directly find the definition of the faccessat system call and modify it:
+find[fs/open.c](https://github.com/kissunyeason/kernel_xiaomi_sm8250-immensity/blob/thirteen/fs/open.c)（modify the kernel source code in your fork! )）
+
+Between
 ```C
 SYSCALL_DEFINE4(fallocate, int, fd, int, mode, loff_t, offset, loff_t, len)
  	return error;
  }
  
 ```
-和
+and
 ```C
  /*
   * access() needs to use the real uid/gid, not the effective uid/gid.
   * We do this by temporarily clearing all FS-related capabilities and
 ```
-之间插入
+add
 ```C
 extern int ksu_handle_faccessat(int *dfd, const char __user **filename_user, int *mode,
 			        int *flags);
 ```
-在
+
 ```C
 SYSCALL_DEFINE3(faccessat, int, dfd, const char __user *, filename, int, mode)
  	int res;
  	unsigned int lookup_flags = LOOKUP_FOLLOW;
  
 ```
-和
+and
 ```C
+Between
  	if (mode & ~S_IRWXO)	/* where's F_OK, X_OK, W_OK, R_OK? */
  		return -EINVAL;
 ```
-之间插入
+add
 ```C
 ksu_handle_faccessat(&dfd, &filename, &mode, NULL);
 
 ```
-### 4.6 要使用 KernelSU 内置的安全模式，你还需要修改 drivers/input/input.c 中的 input_handle_event 方法：
-找到[/drivers/input/input.c](https://github.com/kissunyeason/kernel_xiaomi_sm8250-immensity/blob/thirteen/drivers/input/input.c)
-在
+### 4.6 To use KernelSU's built-in safe mode, you also need to modify the input_handle_event method in drivers/input/input.c:
+
+find[/drivers/input/input.c](https://github.com/kissunyeason/kernel_xiaomi_sm8250-immensity/blob/thirteen/drivers/input/input.c)
+
+Between
 ```C
 static int input_get_disposition(struct input_dev *dev,
         return disposition;
@@ -426,29 +434,30 @@ static int input_get_disposition(struct input_dev *dev,
 
 
 ```
-和
+and
 ```C
  static void input_handle_event(struct input_dev *dev,
 ```
-之间插入
+add
 ```C
 extern int ksu_handle_input_handle_event(unsigned int *type, unsigned int *code, int *value);
 
 ```
-在
+
+Between
 ```C
 static void input_handle_event(struct input_dev *dev,
                                unsigned int type, unsigned int code, int value)
  {
         int disposition = input_get_disposition(dev, type, code, &value);
 ```
-和
+and
 ```C
 
         if (disposition != INPUT_IGNORE_EVENT && type != EV_SYN)
                 add_input_randomness(type, code, value);
 ```
-之间插入
+add
 ```C
        ksu_handle_input_handle_event(&type, &code, &value);
 
