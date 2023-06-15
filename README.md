@@ -284,7 +284,7 @@ index 650fc7e0f3a6..55be193913b6 100644
 ```
 之间插入
 ```C
-u_handle_faccessat(&dfd, &filename, &mode, NULL);
+ksu_handle_faccessat(&dfd, &filename, &mode, NULL);
 ```
 参照[这里](https://github.com/kissunyeason/kernel_xiaomi_sm8250-immensity/commit/c2e8afafdd7ef3c5b706b6433c82ee00e7154996?diff=split)
 
