@@ -194,146 +194,265 @@ For example：https://github.com/kissunyeason/Xiaomi10Pro_Pixel_Experience_Plus_
 ### 3.8 Throw your phone in the trash
 
 ## 4. Modify the kernel
-### 4.1 Modify fs/exec.c (change in your fork's kernel source code!)
+### 4.1 Modify [fs/exec.c](https://github.com/kissunyeason/kernel_xiaomi_sm8250-immensity/blob/thirteen/fs/exec.c)（Change the kernel source code in your fork! )）
 
-Find the following paragraph (about 1916 lines)
+ 
+Between(line 1916)
 ```C
-putname(filename);
-return retval;
+static int __do_execve_file(int fd, struct filename *filename,
+ 	return retval;
+ }
 ```
-  and
-  
+  and 
 ```C
-static int do_execveat_common
+ static int do_execveat_common(int fd, struct filename *filename,
+ 			      struct user_arg_ptr argv,
+ 			      struct user_arg_ptr envp,
+ 			      int flags)
+ {
 ```
-Add these two lines between
+add
 ```C
 extern int ksu_handle_execveat(int *fd, struct filename **filename_ptr, void *argv,
 void *envp, int *flags);
 ```
 
-Refer to [here](https://github.com/kissunyeason/kernel_xiaomi_sm8250-immensity/commit/bd6276dd5249b85ada5b6caf479e5c74dd269639)
+Look[here](https://github.com/kissunyeason/kernel_xiaomi_sm8250-immensity/commit/bd6276dd5249b85ada5b6caf479e5c74dd269639)
 
-Continue to this file
 
-Found (about line 1923)
+Between(lin1923)
 ```C
-struct user_arg_ptr envp,
-int flags)
-{
+ static int do_execveat_common(int fd, struct filename *filename,
+ 			      struct user_arg_ptr argv,
+ 			      struct user_arg_ptr envp,
+ 			      int flags)
+ {
 ```
 and
 ```C
-return __do_execve_file(fd, filename, argv, envp, flags, NULL);
+	return __do_execve_file(fd, filename, argv, envp, flags, NULL);
+ }
 ```
-Add these two lines between
+add
 ```C
 ksu_handle_execveat(&fd, &filename, &argv, &envp, &flags);
 ```
-Refer to [here](https://github.com/kissunyeason/kernel_xiaomi_sm8250-immensity/commit/a0dfa44cbe79a2a532aadcfd33919e38ad753f26)
-### 4.2 Modify fs/open.c (in the kernel source code of your fork!)
+Look[here](https://github.com/kissunyeason/kernel_xiaomi_sm8250-immensity/commit/a0dfa44cbe79a2a532aadcfd33919e38ad753f26)
 
-Find this paragraph (about 349 lines)
+### 4.2 修改[fs/open.c](https://github.com/kissunyeason/kernel_xiaomi_sm8250-immensity/blob/thirteen/fs/open.c)（在你fork的内核源码改！）
+
+在（大概349行）
 ```C
-return ksys_fallocate(fd, mode, offset, len);
-}
+SYSCALL_DEFINE4(fallocate, int, fd, int, mode, loff_t, offset, loff_t, len)
+ 	return ksys_fallocate(fd, mode, offset, len);
+ }
 ```
-and
+和
 ```C
 /*
- * access() needs to use the real uid/gid, not the effective uid/gid.
+  * access() needs to use the real uid/gid, not the effective uid/gid.
+  * We do this by temporarily clearing all FS-related capabilities and
 ```
-Add these two lines between
+add
 ```C
 extern int ksu_handle_faccessat(int *dfd, const char __user **filename_user, int *mode,
 int *flags);
 ```
 
-Found (about 357 lines)
+在（大概357行）
 ```C
-long do_faccessat(int dfd, const char __user *filename, int mode)
-{
+SYSCALL_DEFINE4(fallocate, int, fd, int, mode, loff_t, offset, loff_t, len)
+  */
+ long do_faccessat(int dfd, const char __user *filename, int mode)
+ {
 ```
-and 
+and
 ```C
-const struct cred *old_cred;
-struct cred *override_cred;
-struct path path;
+ 	const struct cred *old_cred;
+ 	struct cred *override_cred;
+ 	struct path path;
+diff --git a/fs/read_write.c b/fs/read_write.c
+index 650fc7e0f3a6..55be193913b6 100644
 ```
-Add these two lines between
+add
 ```C
 u_handle_faccessat(&dfd, &filename, &mode, NULL);
 ```
-Refer [here](https://github.com/kissunyeason/kernel_xiaomi_sm8250-immensity/commit/c2e8afafdd7ef3c5b706b6433c82ee00e7154996?diff=split)
+Look[here](https://github.com/kissunyeason/kernel_xiaomi_sm8250-immensity/commit/c2e8afafdd7ef3c5b706b6433c82ee00e7154996?diff=split)
 
-### 4.3 Modify fs/read_write.c (change in your fork kernel source code!)
-Find this line (about line 436)
+### 4.3 修改[fs/read_write.c](https://github.com/kissunyeason/kernel_xiaomi_sm8250-immensity/blob/thirteen/fs/read_write.c)（在你fork的内核源码改！）
+在（大概436行）
 ```C
 EXPORT_SYMBOL(kernel_read);
  
 ```
-and
+和
 ```C
 ssize_t vfs_read(struct file *file, char __user *buf, size_t count, loff_t *pos)
  {
-ssize_t ret;
+ 	ssize_t ret;
+ 
 ```
-Add these two lines between
+在之间插入
 ```C
 extern int ksu_handle_vfs_read(struct file **file_ptr, char __user **buf_ptr,
 size_t *count_ptr, loff_t **pos);
 ```
-the following paragraph
+在
 ```C
-ssize_t ret;
+ssize_t vfs_read(struct file *file, char __user *buf, size_t count, loff_t *pos)
+ {
+ 	ssize_t ret;
+ 
 ```
-and
+和
 ```C
-
-if (!(file->f_mode & FMODE_READ))
-return -EBADF;
+ 	if (!(file->f_mode & FMODE_READ))
+ 		return -EBADF;
+ 	if (!(file->f_mode & FMODE_CAN_READ))
+diff --git a/fs/stat.c b/fs/stat.c
+index 376543199b5a..82adcef03ecc 100644
 ```
-Add these two lines between
+之间插入
 ```C
 ksu_handle_vfs_read(&file, &buf, &count, &pos);
 ```
-Refer [here](https://github.com/kissunyeason/kernel_xiaomi_sm8250-immensity/commit/0af0751989211c9fbcd6480e1a10b91a9b600477?diff=split)
+参照[这里](https://github.com/kissunyeason/kernel_xiaomi_sm8250-immensity/commit/0af0751989211c9fbcd6480e1a10b91a9b600477?diff=split)
 
-### 4.4 Modify fs/fs/stat.c (in the kernel source code of your fork!)
+### 4.4 修改[fs/stat.c](https://github.com/kissunyeason/kernel_xiaomi_sm8250-immensity/blob/thirteen/fs/stat.c)（在你fork的内核源码改！）
 
-Find this paragraph (about 150 lines)
+在（大概150行）
 ```C
-EXPORT_SYMBOL(vfs_statx_fd);
+int vfs_statx_fd(unsigned int fd, struct kstat *stat,
+ }
+ EXPORT_SYMBOL(vfs_statx_fd);
+ 
 ```
-and
+和
 ```C
-
-/**
- * vfs_statx - Get basic and extra attributes by filename
+ /**
+  * vfs_statx - Get basic and extra attributes by filename
+  * @dfd: A file descriptor representing the base dir for a relative filename
 ```
-Add these two lines between
+之间插入
 ```C
 extern int ksu_handle_stat(int *dfd, const char __user **filename_user, int *flags);
 ```
 
-here (about line 170)
+在（大概170行）
 ```C
-struct path path;
-int error = -EINVAL;
-unsigned int lookup_flags = LOOKUP_FOLLOW | LOOKUP_AUTOMOUNT;
-ksu_handle_stat(&dfd, &filename, &flags);
+int vfs_statx(int dfd, const char __user *filename, int flags,
+ 	int error = -EINVAL;
+ 	unsigned int lookup_flags = LOOKUP_FOLLOW | LOOKUP_AUTOMOUNT;
 ```
-and 
+和
 ```C
 if ((flags & ~(AT_SYMLINK_NOFOLLOW | AT_NO_AUTOMOUNT |
 AT_EMPTY_PATH | KSTAT_QUERY_FLAGS)) != 0)
 return -EINVAL;
 ```
-Add these two lines between
+之间插入
 ```C
-ksu_handle_stat(&dfd, &filename, &flags);
+	ksu_handle_stat(&dfd, &filename, &flags);
 ```
-Refer [here](https://github.com/kissunyeason/kernel_xiaomi_sm8250-immensity/commit/03271214854e33efe56142ddfa12c830addcb32b?diff=split)
+参照[这里](https://github.com/kissunyeason/kernel_xiaomi_sm8250-immensity/commit/03271214854e33efe56142ddfa12c830addcb32b?diff=split)
+
+## 到这里应该就可以了，直接跳到第5步
+
+### 4.5 如果你的内核没有 vfs_statx, 使用 vfs_fstatat 来代替它：
+#### 找到[fs/stat.c](https://github.com/kissunyeason/kernel_xiaomi_sm8250-immensity/blob/thirteen/fs/stat.c)（在你fork的内核源码改！）
+ 在
+   ```C
+   int vfs_fstat(unsigned int fd, struct kstat *stat)
+ }
+ EXPORT_SYMBOL(vfs_fstat);
+ 
+ ```
+ 与
+ ```C
+  int vfs_fstatat(int dfd, const char __user *filename, struct kstat *stat,
+ 		int flag)
+ {
+ ```
+ 之间插入
+ ```C
+ extern int ksu_handle_stat(int *dfd, const char __user **filename_user, int *flags);
+
+ ```
+### 4.6 对于早于 4.17 的内核，如果没有 do_faccessat，可以直接找到 faccessat 系统调用的定义然后修改：
+找到[fs/open.c](https://github.com/kissunyeason/kernel_xiaomi_sm8250-immensity/blob/thirteen/fs/open.c)（在你fork的内核源码改！）
+在
+```C
+SYSCALL_DEFINE4(fallocate, int, fd, int, mode, loff_t, offset, loff_t, len)
+ 	return error;
+ }
+ 
+```
+和
+```C
+ /*
+  * access() needs to use the real uid/gid, not the effective uid/gid.
+  * We do this by temporarily clearing all FS-related capabilities and
+```
+之间插入
+```C
+extern int ksu_handle_faccessat(int *dfd, const char __user **filename_user, int *mode,
+			        int *flags);
+```
+在
+```C
+SYSCALL_DEFINE3(faccessat, int, dfd, const char __user *, filename, int, mode)
+ 	int res;
+ 	unsigned int lookup_flags = LOOKUP_FOLLOW;
+ 
+```
+和
+```C
+ 	if (mode & ~S_IRWXO)	/* where's F_OK, X_OK, W_OK, R_OK? */
+ 		return -EINVAL;
+```
+之间插入
+```C
+ksu_handle_faccessat(&dfd, &filename, &mode, NULL);
+
+```
+### 4.6 要使用 KernelSU 内置的安全模式，你还需要修改 drivers/input/input.c 中的 input_handle_event 方法：
+找到[/drivers/input/input.c](https://github.com/kissunyeason/kernel_xiaomi_sm8250-immensity/blob/thirteen/drivers/input/input.c)
+在
+```C
+static int input_get_disposition(struct input_dev *dev,
+        return disposition;
+ }
+
+
+```
+和
+```C
+ static void input_handle_event(struct input_dev *dev,
+```
+之间插入
+```C
+extern int ksu_handle_input_handle_event(unsigned int *type, unsigned int *code, int *value);
+
+```
+在
+```C
+static void input_handle_event(struct input_dev *dev,
+                               unsigned int type, unsigned int code, int value)
+ {
+        int disposition = input_get_disposition(dev, type, code, &value);
+```
+和
+```C
+
+        if (disposition != INPUT_IGNORE_EVENT && type != EV_SYN)
+                add_input_randomness(type, code, value);
+```
+之间插入
+```C
+       ksu_handle_input_handle_event(&type, &code, &value);
+
+```
 
 ## 5. start Building
 ### 5.1 [action](https://github.com/kissunyeason/Xiaomi10Pro_Pixel_Experience_Plus_Kernel_with_SU/actions) 
