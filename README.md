@@ -204,17 +204,16 @@ LTO 用于优化内核，但有些时候会导致错误
 ## 4. 修改内核
 ### 4.1 修改 [fs/exec.c](https://github.com/kissunyeason/kernel_xiaomi_sm8250-immensity/blob/thirteen/fs/exec.c)（在你fork的内核源码改！）
 
-找到下面这段话(大概1916行)
+在(大概1916行)
 ```C
 putname(filename);
 return retval;
 ```
-  和
-  
+  和  
 ```C
 static int do_execveat_common
 ```
-之间添加这两行
+之间插入
 ```C
 extern int ksu_handle_execveat(int *fd, struct filename **filename_ptr, void *argv,
 void *envp, int *flags);
@@ -224,7 +223,7 @@ void *envp, int *flags);
 
 还是这个文件
 
-找到(大概1923行)
+在(大概1923行)
 ```C
 struct user_arg_ptr envp,
 int flags)
@@ -242,7 +241,7 @@ ksu_handle_execveat(&fd, &filename, &argv, &envp, &flags);
 
 ### 4.2 修改[fs/open.c](https://github.com/kissunyeason/kernel_xiaomi_sm8250-immensity/blob/thirteen/fs/open.c)（在你fork的内核源码改！）
 
-找到这段（大概349行）
+在（大概349行）
 ```C
 return ksys_fallocate(fd, mode, offset, len);
 }
@@ -258,7 +257,7 @@ extern int ksu_handle_faccessat(int *dfd, const char __user **filename_user, int
 int *flags);
 ```
 
-找到（大概357行）
+在（大概357行）
 ```C
 long do_faccessat(int dfd, const char __user *filename, int mode)
 {
@@ -276,7 +275,7 @@ u_handle_faccessat(&dfd, &filename, &mode, NULL);
 参照[这里](https://github.com/kissunyeason/kernel_xiaomi_sm8250-immensity/commit/c2e8afafdd7ef3c5b706b6433c82ee00e7154996?diff=split)
 
 ### 4.3 修改[fs/read_write.c](https://github.com/kissunyeason/kernel_xiaomi_sm8250-immensity/blob/thirteen/fs/read_write.c)（在你fork的内核源码改！）
-找到这行（大概436行）
+在（大概436行）
 ```C
 EXPORT_SYMBOL(kernel_read);
  
@@ -292,7 +291,6 @@ ssize_t ret;
 extern int ksu_handle_vfs_read(struct file **file_ptr, char __user **buf_ptr,
 size_t *count_ptr, loff_t **pos);
 ```
-紧接着下面
 在
 ```C
 ssize_t ret;
@@ -311,7 +309,7 @@ ksu_handle_vfs_read(&file, &buf, &count, &pos);
 
 ### 4.4 修改[fs/stat.c](https://github.com/kissunyeason/kernel_xiaomi_sm8250-immensity/blob/thirteen/fs/stat.c)（在你fork的内核源码改！）
 
-找到这段（大概150行）
+在（大概150行）
 ```C
 EXPORT_SYMBOL(vfs_statx_fd);
 ```
@@ -326,7 +324,7 @@ EXPORT_SYMBOL(vfs_statx_fd);
 extern int ksu_handle_stat(int *dfd, const char __user **filename_user, int *flags);
 ```
 
-在这里（大概170行）
+在（大概170行）
 ```C
 struct path path;
 int error = -EINVAL;
@@ -349,7 +347,7 @@ ksu_handle_stat(&dfd, &filename, &flags);
 
 ### 4.5 如果你的内核没有 vfs_statx, 使用 vfs_fstatat 来代替它：
 #### 找到[fs/stat.c](https://github.com/kissunyeason/kernel_xiaomi_sm8250-immensity/blob/thirteen/fs/stat.c)（在你fork的内核源码改！）
-   在
+ 在
    ```C
    int vfs_fstat(unsigned int fd, struct kstat *stat)
  }
@@ -438,7 +436,7 @@ static void input_handle_event(struct input_dev *dev,
 ```
 之间插入
 ```C
-+       ksu_handle_input_handle_event(&type, &code, &value);
+       ksu_handle_input_handle_event(&type, &code, &value);
 
 ```
 ## 5. 开始编译
