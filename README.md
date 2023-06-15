@@ -1,4 +1,4 @@
-[简体中文](https://github.com/kissunyeason/Xiaomi10Pro_Pixel_Experience_Plus_Kernel_with_SU/README.md)|[English]([[https://github.com/kissunyeason/Xiaomi10Pro_Pixel_Experience_Plus_Kernel_with_SU/README_EN.md](https://github.com/kissunyeason/Xiaomi10Pro_Pixel_Experience_Plus_Kernel_with_SU/blob/main/README_EN.md)](https://github.com/kissunyeason/Xiaomi10Pro_Pixel_Experience_Plus_Kernel_with_SU/blob/main/README_EN.md))
+[简体中文](https://github.com/kissunyeason/Xiaomi10Pro_Pixel_Experience_Plus_Kernel_with_SU/README.md)|[English]([[[https://github.com/kissunyeason/Xiaomi10Pro_Pixel_Experience_Plus_Kernel_with_SU/README_EN.md](https://github.com/kissunyeason/Xiaomi10Pro_Pixel_Experience_Plus_Kernel_with_SU/blob/main/README_EN.md)]
 # 小米10和小米10 Pro pixel experience plus 内核构建kernelSU教程
 
 ## （其他机型和系统也可以参照，主要是后面修改内核的部分）
