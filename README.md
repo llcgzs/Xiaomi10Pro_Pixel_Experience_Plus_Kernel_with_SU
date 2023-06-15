@@ -202,7 +202,7 @@ LTO 用于优化内核，但有些时候会导致错误
 ### 3.8 把手机扔垃圾桶
 
 ## 4. 修改内核
-### 4.1 修改 fs/exec.c（在你fork的内核源码改！）
+### 4.1 修改 [fs/exec.c](https://github.com/kissunyeason/kernel_xiaomi_sm8250-immensity/blob/thirteen/fs/exec.c)（在你fork的内核源码改！）
 
 找到下面这段话(大概1916行)
 ```C
@@ -239,7 +239,8 @@ return __do_execve_file(fd, filename, argv, envp, flags, NULL);
 ksu_handle_execveat(&fd, &filename, &argv, &envp, &flags);
 ```
 参照[这里](https://github.com/kissunyeason/kernel_xiaomi_sm8250-immensity/commit/a0dfa44cbe79a2a532aadcfd33919e38ad753f26)
-### 4.2 修改 fs/open.c（在你fork的内核源码改！）
+
+### 4.2 修改[fs/open.c](https://github.com/kissunyeason/kernel_xiaomi_sm8250-immensity/blob/thirteen/fs/open.c)（在你fork的内核源码改！）
 
 找到这段（大概349行）
 ```C
@@ -274,7 +275,7 @@ u_handle_faccessat(&dfd, &filename, &mode, NULL);
 ```
 参照[这里](https://github.com/kissunyeason/kernel_xiaomi_sm8250-immensity/commit/c2e8afafdd7ef3c5b706b6433c82ee00e7154996?diff=split)
 
-### 4.3 修改 fs/read_write.c（在你fork的内核源码改！）
+### 4.3 修改[fs/read_write.c](https://github.com/kissunyeason/kernel_xiaomi_sm8250-immensity/blob/thirteen/fs/read_write.c)（在你fork的内核源码改！）
 找到这行（大概436行）
 ```C
 EXPORT_SYMBOL(kernel_read);
@@ -308,7 +309,7 @@ ksu_handle_vfs_read(&file, &buf, &count, &pos);
 ```
 参照[这里](https://github.com/kissunyeason/kernel_xiaomi_sm8250-immensity/commit/0af0751989211c9fbcd6480e1a10b91a9b600477?diff=split)
 
-### 4.4 修改 fs/fs/stat.c（在你fork的内核源码改！）
+### 4.4 修改[fs/stat.c](https://github.com/kissunyeason/kernel_xiaomi_sm8250-immensity/blob/thirteen/fs/stat.c)（在你fork的内核源码改！）
 
 找到这段（大概150行）
 ```C
@@ -344,6 +345,8 @@ ksu_handle_stat(&dfd, &filename, &flags);
 ```
 参照[这里](https://github.com/kissunyeason/kernel_xiaomi_sm8250-immensity/commit/03271214854e33efe56142ddfa12c830addcb32b?diff=split)
 
+### 4.5 如果你的内核没有 vfs_statx, 使用 vfs_fstatat 来代替它：
+    找到 fs/stat.c
 ## 5. 开始编译
 ### 5.1 点到 [action](https://github.com/kissunyeason/Xiaomi10Pro_Pixel_Experience_Plus_Kernel_with_SU/actions) 
 ### 5.2 [build-kernel](https://github.com/kissunyeason/Xiaomi10Pro_Pixel_Experience_Plus_Kernel_with_SU/actions/workflows/build-kernel.yml)
