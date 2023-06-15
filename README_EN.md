@@ -1,4 +1,4 @@
-[简体中文](https://github.com/kissunyeason/Xiaomi10Pro_Pixel_Experience_Plus_Kernel_with_SU/README.md)|[English](https://github.com/kissunyeason/Xiaomi10Pro_Pixel_Experience_Plus_Kernel_with_SU/README_EN.md)
+[简体中文]([https://github.com/kissunyeason/Xiaomi10Pro_Pixel_Experience_Plus_Kernel_with_SU/README.md](https://github.com/kissunyeason/Xiaomi10Pro_Pixel_Experience_Plus_Kernel_with_SU/blob/main/README.md))|[English](https://github.com/kissunyeason/Xiaomi10Pro_Pixel_Experience_Plus_Kernel_with_SU/README_EN.md)
 # Mi 10 and Mi 10 Pro pixel experience plus kernel architecture kernelSU tutorial
 # (Other models and systems can also be referred to, mainly the part that modifies the kernel code later)
 ## Kernel 4.19 reference tutorial, directly use kprobe integration, unable to boot, so the kernel source code needs to be modified
