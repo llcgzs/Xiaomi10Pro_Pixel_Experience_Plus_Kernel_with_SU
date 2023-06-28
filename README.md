@@ -202,6 +202,8 @@ LTO 用于优化内核，但有些时候会导致错误
 ### 3.8 把手机扔垃圾桶
 
 ## 4. 修改内核
+
+## （下面的内容可能过时）请参照[这里](https://kernelsu.org/zh_CN/guide/how-to-integrate-for-non-gki.html)，手动修改内核的部分。 
 ### 4.1 修改 [fs/exec.c](https://github.com/kissunyeason/kernel_xiaomi_sm8250-immensity/blob/thirteen/fs/exec.c)（在你fork的内核源码改！）
 
 在(大概1916行)
