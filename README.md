@@ -78,9 +78,10 @@ Use custom clang
 由于 [#23](https://github.com/xiaoleGun/KernelSU_Action/issues/23) 的需要，我们提供可自定义 Google 上游分支的选项，主要的有分支有
 | Clang 分支 |
 | ---------- |
-| master |
-| master-kernel-build-2021 |
-| master-kernel-build-2022 |
+| main |
+| main-kernel-build-2021 |
+| main-kernel-build-2022 |
+傻逼谷歌改来改去，一会master一会main，action报错了就自己打开看错误的网址照着点看文件夹修改
 
 或者其它分支，请根据自己的需求在 https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86 中寻找
 
